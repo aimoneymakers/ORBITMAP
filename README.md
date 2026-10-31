@@ -1,16 +1,12 @@
-# OrbitWatch / OrbitMap — 3D Real-Time Satellite Tracker
+# OrbitMap: Free 3D Real-Time Satellite Tracker (Fork, Brand & Earn)
 
-**Live demo: [orbitmap.space](https://orbitmap.space)**
+A real-time 3D satellite tracker built with Next.js 14 and React Three Fiber. Watch the ISS, Hubble, weather satellites and Starlink on a live 3D globe, a 2D map, or a sky view, all from public orbital data (CelesTrak). **No API key needed for tracking.**
 
-A real-time 3D satellite tracker built with Next.js 14 and React Three Fiber. Watch the ISS, Hubble, weather satellites, and Starlink move across a live wireframe globe, a 2D map, or a naked-eye sky view — all powered by real orbital data.
+Fork it, deploy it free, and make it your own brand from the `/admin` page: name, logo, favicon, address, contact and payment methods, colors, SEO, affiliate products, ads and sponsor banners. No coding required.
 
----
+**Created by aimoneymaker2.0** | MIT License | Repository: [github.com/aimoneymakers/ORBITMAP](https://github.com/aimoneymakers/ORBITMAP)
 
-### 🚀 Hire Me — Custom 3D / WebGL Development
-
-This project is a portfolio piece. If you need a custom **Next.js, React Three Fiber, or WebGL** build — interactive 3D dashboards, data visualizations, real-time tracking apps, or marketing sites with a "mission control" feel like this one — I'm available for freelance and contract work.
-
-📩 **Contact:** [info@orbitmap.space](mailto:info@orbitmap.space)
+> Not affiliated with NASA, ESA or any space agency.
 
 ---
 
@@ -79,8 +75,8 @@ Without Supabase the site still works — it just uses the defaults in [`src/con
 ### Installation
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/orbit-watch.git
-cd orbit-watch
+git clone https://github.com/aimoneymakers/ORBITMAP.git
+cd ORBITMAP
 npm install
 ```
 
@@ -152,9 +148,9 @@ Use Hide/Show to pause a product without deleting it. Disclose affiliate links t
 
 If you fork this project, replace the original author's details before publishing:
 
-1. `package.json` → `author`, `homepage`, `repository`, `description`
-2. `LICENSE` → copyright line (keep the MIT notice itself)
-3. `README.md` → remove or replace the "Hire Me" section and the live demo link
+1. `package.json` → `author`, `homepage`, `repository`
+2. `LICENSE` → keep the MIT notice and original copyright line (it is required by the licence). You may add your own line above it.
+3. `README.md` → replace the title, links and "Created by" line with your own
 4. `/admin` → site name, logo, favicon, address, phone, email, social links, SEO
 5. Add your own logo/images in `public/` (`logo.png`, `favicon-32.png`, `og-blog.png`)
 
@@ -168,6 +164,23 @@ If you fork this project, replace the original author's details before publishin
 ## Data sources & credit
 
 Orbital data: [CelesTrak](https://celestrak.org) (no API key). Location search: OpenStreetMap Nominatim. IP location: ipapi.co. Map tiles: CARTO / OpenStreetMap. These free services have fair-use limits; heavy traffic may need your own caching or a paid plan, and each has its own terms. Keep their credits visible.
+
+## Before you go public: checklist
+
+- [ ] Supabase: run `supabase/schema.sql`, `supabase/products.sql`, `supabase/contact.sql`
+- [ ] Supabase > Authentication: **turn off new user sign-ups**, add only your admin user
+- [ ] Host (Netlify) environment variables set, then redeployed
+- [ ] `/admin` sign-in works and **Save changes** works
+- [ ] Send a test message from `/contact` and read it in `/admin` > Messages
+- [ ] Replace all default text (`My Sat Tracker`, `hello@example.com`) in `/admin`
+- [ ] If you earn money (ads, affiliate, sponsors), you are on a host that allows commercial use
+- [ ] Add your own Privacy Policy details if you use Google Analytics or AdSense
+
+## Credits & data sources
+
+- Orbital data: [CelesTrak](https://celestrak.org) (read their usage terms before heavy use).
+- Location search: OpenStreetMap Nominatim (low-volume fair use only). IP location: ipapi.co (free tier has daily limits).
+- Satellite images in `public/satellites/` and other images: check each image's licence/source before reusing commercially and add credits here if required.
 
 ## Contributing
 

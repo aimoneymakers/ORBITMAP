@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "OrbitMap — a real-time 3D satellite tracker built with Next.js 14, React Three Fiber, and satellite.js. Tracks the ISS, Hubble, weather satellites, and Starlink using live CelesTrak TLE data.",
-  "homepage": "https://orbitmap.space",
+  "homepage": "https://github.com/aimoneymakers/ORBITMAP#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR-USERNAME/orbit-watch.git"
+    "url": "https://github.com/aimoneymakers/ORBITMAP.git"
   },
   "keywords": [
     "nextjs",
@@ -20,7 +20,7 @@
     "celestrak",
     "tailwindcss"
   ],
-  "author": "Imran Rauf <info@orbitmap.space>",
+  "author": "aimoneymaker2.0",
   "license": "MIT",
   "scripts": {
     "dev": "next dev",
