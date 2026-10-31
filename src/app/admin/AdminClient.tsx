@@ -4,9 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import ProductsAdmin from "@/components/admin/ProductsAdmin";
+import MessagesAdmin from "@/components/admin/MessagesAdmin";
+import MethodsEditor from "@/components/admin/MethodsEditor";
 import { DEFAULT_SETTINGS, type AffiliateItem, type SiteSettings } from "@/config/site.config";
 
-type Tab = "brand" | "home" | "contact" | "look" | "earn" | "products" | "bar";
+type Tab = "brand" | "home" | "contact" | "look" | "earn" | "products" | "methods" | "messages" | "bar";
 const TABS: { id: Tab; label: string }[] = [
   { id: "brand", label: "Name & Logo" },
   { id: "home", label: "Home Page" },
@@ -14,6 +16,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "look", label: "Colors & SEO" },
   { id: "earn", label: "💰 Earn Money" },
   { id: "products", label: "🛍️ Products" },
+  { id: "methods", label: "💳 Contacts & Payments" },
+  { id: "messages", label: "✉️ Messages" },
   { id: "bar", label: "Announcement" },
 ];
 
@@ -361,8 +365,12 @@ export default function AdminClient() {
       )}
 
       {loaded && tab === "products" && <ProductsAdmin token={token} />}
+      {loaded && tab === "messages" && <MessagesAdmin token={token} />}
+      {loaded && tab === "methods" && (
+        <MethodsEditor methods={s.contactMethods} onChange={(m) => setS((p) => ({ ...p, contactMethods: m }))} />
+      )}
 
-      {loaded && tab !== "products" && (
+      {loaded && tab !== "products" && tab !== "messages" && (
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-void/95 px-4 py-3 backdrop-blur">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
             <p className={`text-sm ${msg?.ok ? "text-green-400" : "text-red-400"}`}>{msg?.text}</p>

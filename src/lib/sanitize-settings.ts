@@ -1,3 +1,4 @@
+import { KIND_SET, type ContactMethod, type MethodKind } from "@/lib/contact-methods";
 import { DEFAULT_SETTINGS, type AffiliateItem, type SiteSettings } from "@/config/site.config";
 
 // Used on the server for BOTH reading (merge DB row over defaults) and
@@ -24,6 +25,28 @@ export function safeUrl(v: unknown, fallback = ""): string {
   } catch {
     return fallback;
   }
+}
+
+const ctl = (v: unknown, max: number): string =>
+  typeof v === "string" ? v.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").slice(0, max) : "";
+
+function sanitizeMethods(v: unknown): ContactMethod[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .slice(0, 20)
+    .map((raw, idx): ContactMethod => {
+      const o = obj(raw);
+      const kind = KIND_SET.has(String(o.kind)) ? (o.kind as MethodKind) : "link";
+      return {
+        id: ctl(o.id, 40).replace(/[^\w-]/g, "") || `m${idx}`,
+        kind,
+        label: ctl(o.label, 60).trim(),
+        value: ctl(o.value, 200).trim(),
+        details: ctl(o.details, 500).trim(),
+        enabled: bool(o.enabled, true),
+      };
+    })
+    .filter((m) => m.value !== "");
 }
 
 const obj = (v: unknown): Record<string, unknown> =>
@@ -78,6 +101,7 @@ export function sanitizeSettings(input: unknown): SiteSettings {
     instagramUrl: safeUrl(i.instagramUrl),
     youtubeUrl: safeUrl(i.youtubeUrl),
     githubUrl: safeUrl(i.githubUrl),
+    contactMethods: sanitizeMethods(i.contactMethods),
 
     accentColor: hex(i.accentColor, d.accentColor),
     backgroundColor: hex(i.backgroundColor, d.backgroundColor),

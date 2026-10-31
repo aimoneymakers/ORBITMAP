@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getSiteSettings } from "@/lib/site-settings";
 import Link from "next/link";
 import ContactForm from "@/components/ContactForm";
+import ContactMethods from "@/components/ContactMethods";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { siteName } = await getSiteSettings();
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 
 export default async function ContactPage() {
-  const { siteName, contactEmail: CONTACT_EMAIL, siteUrl, phone, address } = await getSiteSettings();
+  const { siteName, contactEmail: CONTACT_EMAIL, siteUrl, phone, address, contactMethods } = await getSiteSettings();
   const domain = siteUrl.replace(/^https?:\/\//, "");
   return (
     <div className="relative">
@@ -60,6 +61,10 @@ export default async function ContactPage() {
             {address && phone ? " · " : ""}
             {phone}
           </p>
+        )}
+
+        {contactMethods.some((m) => m.enabled) && (
+          <ContactMethods methods={contactMethods.filter((m) => m.enabled)} />
         )}
 
         <div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">

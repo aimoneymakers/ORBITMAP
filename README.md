@@ -132,6 +132,13 @@ src/
 
 See [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md) for a full file-by-file breakdown of how the app works.
 
+## Contact form, messages & payment methods
+
+1. In Supabase > SQL Editor run `supabase/contact.sql` once (safe to run again, even if you already have a `contact_submissions` table).
+2. The form on `/contact` saves messages through `/api/contact` (needs `SUPABASE_SERVICE_ROLE_KEY` in your host's environment variables). Read, reply to and delete them in `/admin` > **✉️ Messages**.
+3. In `/admin` > **💳 Contacts & Payments** add only the methods you use (Email, WhatsApp, Bank account, Easypaisa, JazzCash, PayPal, Payoneer, Wise, crypto, other link). Switch each on or off, reorder, edit or remove them, then press **Save changes**. Enabled methods appear on `/contact` with Copy and Open buttons.
+4. Only publish account details you are happy to share publicly.
+
 ## Selling products & affiliate links
 
 1. In Supabase > SQL Editor run `supabase/products.sql` once (after `supabase/schema.sql`).

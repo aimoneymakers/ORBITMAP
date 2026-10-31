@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 
 const INQUIRY_TYPES: { value: string; label: string; hint: string }[] = [
   {
@@ -66,18 +65,27 @@ export default function ContactForm() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("contact_submissions").insert({
-      name: trimmedName,
-      email: trimmedEmail,
-      inquiry_type: inquiryType,
-      description: trimmedDescription,
-      source_page: "/contact",
-    });
-
-    if (insertError) {
-      console.error("contact_submissions insert failed:", insertError);
+    try {
+      const r = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmedName,
+          email: trimmedEmail,
+          inquiry_type: inquiryType,
+          description: trimmedDescription,
+          company,
+        }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        setState("error");
+        setError(j.error ?? "Something went wrong. Please try again, or email us directly.");
+        return;
+      }
+    } catch {
       setState("error");
-      setError("Something went wrong. Please try again, or email us directly.");
+      setError("Network error. Please try again, or email us directly.");
       return;
     }
 

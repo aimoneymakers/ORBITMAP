@@ -2,6 +2,8 @@
 // (saved in the Supabase `site_settings` table). If Supabase is not
 // connected, the site simply uses these defaults — nothing breaks.
 
+import type { ContactMethod } from "@/lib/contact-methods";
+
 export type AffiliateItem = {
   title: string;
   description: string;
@@ -35,6 +37,7 @@ export type SiteSettings = {
   instagramUrl: string;
   youtubeUrl: string;
   githubUrl: string;
+  contactMethods: ContactMethod[]; // extra contact + payment methods (toggle on/off in /admin)
 
   // --- Look ---
   accentColor: string; // hex
@@ -92,13 +95,11 @@ export type SiteSettings = {
   };
 };
 
-// Where the site lives. Netlify/Vercel give us this automatically; you can also set
+// Where the site lives. Vercel gives us this automatically; you can also set
 // NEXT_PUBLIC_SITE_URL. It is only a fallback until you save /admin settings.
 const ENV_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
-  process.env.URL || // set automatically by Netlify
- 
   "http://localhost:3000";
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -123,6 +124,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   instagramUrl: "",
   youtubeUrl: "",
   githubUrl: "",
+  contactMethods: [],
 
   accentColor: "#4FD8EB",
   backgroundColor: "#05070D",
