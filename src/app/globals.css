@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Brand colors — overridden at runtime from /admin (see layout.tsx) */
+:root {
+  --c-void: 5 7 13;
+  --c-orbit: 79 216 235;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: #ff6a3d;
+  color: #05070d;
+}
+
+/* Visible keyboard focus, kept crisp instead of the default blue ring */
+:focus-visible {
+  outline: 2px solid #ff6a3d;
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hides the scrollbar on horizontally-scrollable mobile chrome (header
+   controls, quick actions strip) while keeping it fully scrollable —
+   scoped to a class so nothing else on the page is affected. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* High-contrast mode — brighter text/borders for readability in bright
+   sunlight or for low-vision users. Toggled via the CONTRAST button or "C". */
+.high-contrast {
+  --panelBorder: #6b7690;
+}
+.high-contrast body,
+.high-contrast .text-muted {
+  color: #e7ebf5 !important;
+}
+.high-contrast .text-ink {
+  color: #ffffff !important;
+}
+.high-contrast .border-panelBorder {
+  border-color: #8b96b3 !important;
+}
+.high-contrast .bg-panel,
+.high-contrast .bg-panel\/80,
+.high-contrast .bg-panel\/90,
+.high-contrast .bg-panel\/95 {
+  background-color: #10131c !important;
+}
+/* Same coverage for the glassmorphic panel/border classes introduced in the
+   visual refresh — most panels moved from bg-panel/border-panelBorder to
+   bg-space-900/border-white/5, so the CONTRAST toggle needs to reach those
+   too or it silently stops affecting most of the UI. */
+.high-contrast .bg-space-900\/60,
+.high-contrast .bg-space-900\/70,
+.high-contrast .bg-space-900\/80 {
+  background-color: #10131c !important;
+}
+.high-contrast .border-white\/5,
+.high-contrast .border-white\/10 {
+  border-color: #8b96b3 !important;
+}
+.high-contrast :focus-visible {
+  outline-width: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-panel-in {
+  animation: panelIn 0.28s ease-out;
+}
+
+/* Leaflet map theming — keep the 2D view visually consistent with the rest
+   of the app instead of Leaflet's default light-mode chrome. */
+.leaflet-container {
+  background: rgb(var(--c-void));
+  font-family: var(--font-body), sans-serif;
+}
+.leaflet-control-attribution {
+  background: rgba(11, 15, 26, 0.75) !important;
+  color: #8a93a6 !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a {
+  color: rgb(var(--c-orbit)) !important;
+}
+.leaflet-tooltip {
+  background: #0b0f1a !important;
+  border: 1px solid #1c2333 !important;
+  color: #e8ecf3 !important;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px !important;
+  box-shadow: none !important;
+}
+.leaflet-tooltip-top:before {
+  border-top-color: #1c2333 !important;
+}
+
+/* Realistic Sky View — drifting clouds, twinkling stars, floating object. */
+@keyframes cloudDrift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(220vmax);
+  }
+}
+@keyframes cloudDriftReverse {
+  from {
+    transform: translateX(220vmax);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-star-twinkle {
+  animation-name: starTwinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes starTwinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.animate-sky-float {
+  animation: skyFloat 4.5s ease-in-out infinite;
+}
+@keyframes skyFloat {
+  0%,
+  100% {
+    margin-top: 0px;
+  }
+  50% {
+    margin-top: -6px;
+  }
+}

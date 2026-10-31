@@ -1,0 +1,347 @@
+"use client";
+
+import "leaflet/dist/leaflet.css";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, useMap } from "react-leaflet";
+import * as satellite from "satellite.js";
+import { propagate, type LiveState } from "@/lib/orbit";
+import {
+  SATELLITE_CATALOG,
+  CATEGORY_COLOR,
+  FEATURED_IDS,
+  bulkObjectGroup,
+  bulkObjectColor,
+  type FilterGroup,
+} from "@/lib/satellite-catalog";
+import type { TleResult } from "@/lib/fetch-tle";
+import type { ObserverLocation } from "@/lib/use-location";
+import { reverseGeocode } from "@/lib/geocode";
+
+type Props = {
+  satellites: TleResult[];
+  selectedId: number | null;
+  onSelect: (id: number, state: LiveState | null) => void;
+  location: ObserverLocation | null;
+  filter: FilterGroup;
+  showDots: boolean;
+};
+
+/** Splits a lon/lat track into segments, breaking wherever it wraps the antimeridian. */
+function splitTrack(points: Array<[number, number]>): Array<Array<[number, number]>> {
+  const segments: Array<Array<[number, number]>> = [];
+  let current: Array<[number, number]> = [];
+  for (let i = 0; i < points.length; i++) {
+    const [lat, lon] = points[i];
+    if (current.length > 0) {
+      const prevLon = current[current.length - 1][1];
+      if (Math.abs(lon - prevLon) > 180) {
+        segments.push(current);
+        current = [];
+      }
+    }
+    current.push([lat, lon]);
+  }
+  if (current.length > 0) segments.push(current);
+  return segments;
+}
+
+// Level a satellite-spotting app actually wants when it snaps you to a
+// point: close enough to read city/country context, not a whole-continent
+// smear. flyTo() still respects a tighter zoom the user set manually.
+const FOCUS_ZOOM = 7;
+
+function Recenter({
+  lat,
+  lon,
+  trigger,
+}: {
+  lat: number | null;
+  lon: number | null;
+  trigger: number;
+}) {
+  const map = useMap();
+  const first = useRef(true);
+  useEffect(() => {
+    // Nothing selected (yet) — don't touch the map, and don't consume the
+    // "first" flag, so the *next* real selection still gets treated as the
+    // first centering rather than a follow-up flyTo.
+    if (lat === null || lon === null) return;
+    if (first.current) {
+      map.setView([lat, lon], FOCUS_ZOOM);
+      first.current = false;
+      return;
+    }
+    map.flyTo([lat, lon], Math.max(map.getZoom(), FOCUS_ZOOM), { duration: 0.8 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trigger]);
+  return null;
+}
+
+// Default whole-world view, used both for the initial MapContainer state
+// and for the new "Back" button that returns to it.
+const WORLD_CENTER: [number, number] = [20, 0];
+const WORLD_ZOOM = 2;
+
+function ResetView({ trigger }: { trigger: number }) {
+  const map = useMap();
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) {
+      // Skip on initial mount — trigger starts at 0 and shouldn't fly
+      // anywhere before the person has actually pressed Back.
+      mounted.current = true;
+      return;
+    }
+    map.flyTo(WORLD_CENTER, WORLD_ZOOM, { duration: 0.8 });
+  }, [trigger]);
+  return null;
+}
+
+// Manual +/- zoom, placed in the same safe center gap as the other overlay
+// controls (built-in Leaflet ZoomControl defaults to a screen corner, which
+// on this full-bleed map sits underneath the side panels).
+function ZoomButtons() {
+  const map = useMap();
+  const btnClass =
+    "pointer-events-auto h-8 w-8 flex items-center justify-center rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md text-ink font-mono text-base leading-none hover:bg-space-800/90 transition-colors";
+  return (
+    <div className="absolute top-64 left-1/2 -translate-x-1/2 z-[1000] flex gap-2">
+      <button onClick={() => map.zoomIn()} className={btnClass} aria-label="Zoom in">
+        +
+      </button>
+      <button onClick={() => map.zoomOut()} className={btnClass} aria-label="Zoom out">
+        −
+      </button>
+    </div>
+  );
+}
+
+export default function MapView({ satellites, selectedId, onSelect, location, filter, showDots }: Props) {
+  const [tick, setTick] = useState(0);
+  const [resetTrigger, setResetTrigger] = useState(0);
+  const [placeLabel, setPlaceLabel] = useState<string | null>(null);
+  const [placeLoading, setPlaceLoading] = useState(false);
+
+  // Mass sets update less often than the 3D view's worker cadence would
+  // need in a browser main-thread loop — 2s keeps thousands of Leaflet
+  // canvas redraws from competing with pan/zoom interaction.
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 2000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Same detailed/mass split as the 3D Scene: curated + selected get full
+  // treatment (tooltip, ground track eligibility); everything else is a
+  // lightweight canvas-rendered dot (Phase 2).
+  const visibleSatellites = useMemo(() => {
+    // The selected satellite always renders, even if it falls outside the
+    // active filter (e.g. picked via search, or a deep link) — otherwise
+    // selecting it would make it vanish from the map.
+    if (filter === "featured")
+      return satellites.filter((s) => FEATURED_IDS.has(s.id) || s.id === selectedId);
+    if (filter === "starlink")
+      return satellites.filter(
+        (s) =>
+          FEATURED_IDS.has(s.id) ||
+          s.id === selectedId ||
+          bulkObjectGroup(s.name, s.id) === "starlink"
+      );
+    if (filter === "stations")
+      return satellites.filter(
+        (s) =>
+          FEATURED_IDS.has(s.id) ||
+          s.id === selectedId ||
+          bulkObjectGroup(s.name, s.id) === "station"
+      );
+    return satellites;
+  }, [satellites, filter, selectedId]);
+
+  // When dots are hidden, skip propagating the mass set entirely too — not
+  // just skip drawing it — so "Hide Dots" is also a real performance win,
+  // not purely cosmetic.
+  const renderedSatellites = useMemo(() => {
+    if (showDots) return visibleSatellites;
+    return visibleSatellites.filter((s) => FEATURED_IDS.has(s.id) || s.id === selectedId);
+  }, [visibleSatellites, showDots, selectedId]);
+
+  const satrecs = useMemo(() => {
+    const map = new Map<number, satellite.SatRec>();
+    for (const s of renderedSatellites) {
+      try {
+        map.set(s.id, satellite.twoline2satrec(s.line1, s.line2));
+      } catch {
+        // skip malformed elements
+      }
+    }
+    return map;
+  }, [renderedSatellites]);
+
+  const positions = useMemo(() => {
+    const now = new Date();
+    const map = new Map<number, LiveState>();
+    for (const [id, rec] of satrecs) {
+      const state = propagate(rec, now);
+      if (state) map.set(id, state);
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [satrecs, tick]);
+
+  // Report live telemetry for the selected satellite up to the parent, same
+  // contract SatelliteMarker uses in the 3D scene.
+  useEffect(() => {
+    if (selectedId === null) return;
+    const state = positions.get(selectedId);
+    if (state) onSelect(selectedId, state);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positions, selectedId]);
+
+  // Nearest city/country label for the selected object's current subpoint.
+  // Runs once per selection change, not on every 2s position tick — a
+  // fresh lookup every tick would hammer Nominatim's free API for a label
+  // that's only ever off by a few km between ticks anyway.
+  useEffect(() => {
+    if (selectedId === null) {
+      setPlaceLabel(null);
+      setPlaceLoading(false);
+      return;
+    }
+    const pos = positions.get(selectedId);
+    if (!pos) return;
+    let cancelled = false;
+    setPlaceLoading(true);
+    reverseGeocode(pos.lat, pos.lon).then((label) => {
+      if (cancelled) return;
+      setPlaceLabel(label ?? "Over open ocean / no nearby city");
+      setPlaceLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId]);
+
+  const groundTrack = useMemo(() => {
+    if (selectedId === null) return [];
+    const rec = satrecs.get(selectedId);
+    if (!rec) return [];
+    const now = Date.now();
+    const pts: Array<[number, number]> = [];
+    for (let i = -45; i <= 45; i += 2) {
+      const state = propagate(rec, new Date(now + i * 60 * 1000));
+      if (state) pts.push([state.lat, state.lon]);
+    }
+    return splitTrack(pts);
+  }, [selectedId, satrecs, tick]);
+
+  const selectedPos = selectedId !== null ? positions.get(selectedId) : null;
+  const selectedGroundColor =
+    selectedId !== null
+      ? CATEGORY_COLOR[SATELLITE_CATALOG.find((c) => c.id === selectedId)?.category ?? "science"]
+      : "#4FD8EB";
+
+  return (
+    <div className="h-full w-full bg-void relative z-0">
+      <MapContainer
+        center={WORLD_CENTER}
+        zoom={WORLD_ZOOM}
+        minZoom={2}
+        worldCopyJump
+        zoomControl={false}
+        // Canvas renderer batches all vector markers onto shared <canvas>
+        // panes instead of one DOM node per marker (Phase 2) — the win that
+        // matters once `filter` goes beyond the curated set.
+        preferCanvas
+        style={{ height: "100%", width: "100%", background: "#05070D" }}
+        attributionControl={true}
+      >
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          subdomains="abcd"
+          maxZoom={19}
+        />
+
+        <Recenter
+          lat={selectedPos ? selectedPos.lat : null}
+          lon={selectedPos ? selectedPos.lon : null}
+          trigger={selectedId ?? 0}
+        />
+        <ResetView trigger={resetTrigger} />
+        <ZoomButtons />
+
+        {groundTrack.map((segment, i) => (
+          <Polyline
+            key={i}
+            positions={segment}
+            pathOptions={{
+              color: selectedGroundColor,
+              weight: 2,
+              opacity: 0.6,
+              dashArray: "4 4",
+            }}
+          />
+        ))}
+
+        {renderedSatellites.map((sat) => {
+          const entry = SATELLITE_CATALOG.find((c) => c.id === sat.id);
+          const pos = positions.get(sat.id);
+          if (!pos) return null;
+          const isSelected = selectedId === sat.id;
+          const isFeatured = entry !== undefined;
+          const color = entry ? CATEGORY_COLOR[entry.category] : bulkObjectColor(sat.name, sat.id);
+          const name = entry?.name ?? sat.name;
+          return (
+            <CircleMarker
+              key={sat.id}
+              center={[pos.lat, pos.lon]}
+              radius={isSelected ? 7 : isFeatured ? 4.5 : 2.5}
+              pathOptions={{
+                color: isSelected ? "#FFFFFF" : color,
+                weight: isSelected ? 2 : 1,
+                fillColor: color,
+                fillOpacity: isFeatured || isSelected ? 0.9 : 0.6,
+              }}
+              eventHandlers={{
+                click: () => onSelect(sat.id, pos),
+              }}
+            >
+              {(isFeatured || isSelected) && (
+                <Tooltip direction="top" offset={[0, -4]} opacity={0.9}>
+                  {name}
+                </Tooltip>
+              )}
+            </CircleMarker>
+          );
+        })}
+
+        {location && (
+          <CircleMarker
+            center={[location.lat, location.lon]}
+            radius={6}
+            pathOptions={{ color: "#FF6A3D", weight: 2, fillColor: "#FF6A3D", fillOpacity: 0.25 }}
+          >
+            <Tooltip direction="top" offset={[0, -4]} opacity={0.9}>
+              Your location
+            </Tooltip>
+          </CircleMarker>
+        )}
+      </MapContainer>
+
+      <div className="absolute top-52 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 pointer-events-none">
+        {selectedId !== null && (
+          <div className="pointer-events-auto rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md px-3 py-1.5 text-xs font-mono text-ink whitespace-nowrap">
+            {placeLoading ? "Locating nearest city…" : placeLabel}
+          </div>
+        )}
+
+        <button
+          onClick={() => setResetTrigger((t) => t + 1)}
+          className="pointer-events-auto rounded-lg border border-white/10 bg-space-900/80 backdrop-blur-md px-3 py-1.5 text-xs font-mono text-ink hover:bg-space-800/90 transition-colors whitespace-nowrap"
+        >
+          ← Back to World View
+        </button>
+      </div>
+    </div>
+  );
+}
