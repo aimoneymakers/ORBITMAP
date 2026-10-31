@@ -68,9 +68,11 @@ export default function AdminClient() {
       setChecking(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => setSession(sess));
-    fetch("/api/admin/settings", { method: "HEAD" })
-      .then((r) => setSetupOk(r.ok))
-      .catch(() => setSetupOk(false));
+    // GET without a token: 503 = admin not configured, 401 = configured (just not signed in).
+    // (Some hosts such as Netlify do not pass HEAD requests through reliably.)
+    fetch("/api/admin/settings")
+      .then((r) => setSetupOk(r.status !== 503))
+      .catch(() => setSetupOk(true));
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -174,7 +176,7 @@ export default function AdminClient() {
           <li>Create a free project on <b>supabase.com</b>.</li>
           <li>Supabase → SQL Editor → paste the contents of <code>supabase/schema.sql</code> → Run.</li>
           <li>Supabase → Authentication → Users → <b>Add user</b> (your email + password).</li>
-          <li>In Vercel → Settings → Environment Variables add: <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code> and <code>ADMIN_EMAILS</code> (your email).</li>
+          <li>In your host (Netlify / Vercel) → Environment Variables add: <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code> and <code>ADMIN_EMAILS</code> (your email).</li>
           <li>Redeploy, then come back to this page.</li>
         </ol>
       </Card>

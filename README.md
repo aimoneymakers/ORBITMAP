@@ -16,21 +16,28 @@ This project is a portfolio piece. If you need a custom **Next.js, React Three F
 
 ## Make it your own — no code needed
 
-Fork this repo, deploy to **Netlify** (free plan allows commercial use), then open **`/admin`** on your site to change the name, logo, favicon, address, contact details, colors, SEO and to switch on ways to earn (AdSense, affiliate links, sponsor banner, support/Pro button, any other ad network).
+Fork this repo, deploy to **Vercel** (personal/non-commercial) or **Netlify** (if you will earn money), then open **`/admin`** on your site to change the name, logo, favicon, address, contact details, colors, SEO and to switch on ways to earn (AdSense, affiliate links, sponsor banner, support/Pro button, any other ad network).
 
 
-> ### ⚠️ Hosting: do NOT use Vercel's free (Hobby) plan for a money-making site
-> Vercel's Hobby plan is **personal, non-commercial use only**. If you switch on AdSense, affiliate links, a sponsor banner or a Pro button, use **Netlify's free plan** (commercial use allowed at the time of writing) or a paid Vercel Pro plan. Terms change, so always read your host's current terms yourself.
+> ### ⚠️ Which host? Check this first
+> | Your site | Use |
+> |---|---|
+> | Personal / learning / portfolio, **no ads, no affiliate, no paid plans, no client work** | Vercel free (Hobby) is fine |
+> | **Earning money** (AdSense, affiliate, sponsor banner, Pro button, selling services) | **Netlify** free plan (commercial use allowed at the time of writing), or Vercel **Pro** (paid) |
+>
+> Vercel's Hobby plan is personal, non-commercial use only. If you switch on any earning option in `/admin`, move to Netlify or Vercel Pro. Terms change, so always read your host's current terms yourself.
 
 **One-time setup (about 10 minutes):**
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Supabase → **SQL Editor** → paste everything from [`supabase/schema.sql`](supabase/schema.sql) → **Run**.
 3. Supabase → **Authentication → Users → Add user** (your email + a strong password).
-4. Go to [netlify.com](https://netlify.com) → **Add new project → Import from GitHub** → pick your fork. Build command `npm run build` (already set in `netlify.toml`).
-5. Before the first deploy (or after, then redeploy), open **Site configuration → Environment variables** and add the 4 values from [`.env.example`](.env.example): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAILS`.
-6. **Deploy** (or **Deploys → Trigger deploy** after adding variables), open `https://your-site.netlify.app/admin`, sign in, edit, press **Save changes**.
-7. Custom domain: **Domain management → Add a domain**, then add the DNS record Netlify shows at your domain registrar.
+4. Deploy:
+   - **Vercel (non-commercial only):** [vercel.com](https://vercel.com) → **Add New → Project** → import your fork → add the variables below under **Settings → Environment Variables** → Deploy. Domain: **Settings → Domains**.
+   - **Netlify (commercial OK):** [netlify.com](https://netlify.com) → **Add new project → Import from GitHub** → pick your fork (build settings are in `netlify.toml`). Domain: **Domain management → Add a domain**.
+5. Add the 4 values from [`.env.example`](.env.example) in your host's Environment Variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAILS`.
+6. Redeploy (variables only apply after a new deploy), open `https://your-site/admin`, sign in, edit, press **Save changes**.
+7. Add the DNS record your host shows at your domain registrar to use your own domain.
 
 Without Supabase the site still works — it just uses the defaults in [`src/config/site.config.ts`](src/config/site.config.ts).
 
@@ -106,7 +113,10 @@ npm run start
 
 ## Deployment
 
-Recommended for sites that earn money: **Netlify** (free plan, commercial use allowed; settings in [`netlify.toml`](netlify.toml)). Connect your GitHub fork, add the environment variables from `.env.example` in the dashboard, and deploy. Vercel Pro also works, but Vercel's free Hobby plan is non-commercial only (see the warning above). Whichever host you use, check its current terms and limits.
+- **Personal / non-commercial:** Vercel free (Hobby) works with zero config.
+- **Commercial (ads, affiliate, sponsors, paid plans):** use **Netlify** (settings in [`netlify.toml`](netlify.toml)) or Vercel Pro.
+
+Add the environment variables from `.env.example` in your host's dashboard, then deploy. Always check your host's current terms and limits.
 
 ## Project Structure
 
