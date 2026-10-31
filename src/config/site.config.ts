@@ -92,11 +92,13 @@ export type SiteSettings = {
   };
 };
 
-// Where the site lives. Vercel gives us this automatically; you can also set
+// Where the site lives. Netlify/Vercel give us this automatically; you can also set
 // NEXT_PUBLIC_SITE_URL. It is only a fallback until you save /admin settings.
 const ENV_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
+  process.env.URL || // set automatically by Netlify
+ 
   "http://localhost:3000";
 
 export const DEFAULT_SETTINGS: SiteSettings = {

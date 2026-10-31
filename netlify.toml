@@ -1,0 +1,6 @@
+# Netlify auto-detects Next.js. This file only pins the basics.
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
