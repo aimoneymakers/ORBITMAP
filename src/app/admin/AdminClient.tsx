@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabaseClient";
+import { adminAuth as supabase } from "@/lib/supabase-admin-browser";
 import ProductsAdmin from "@/components/admin/ProductsAdmin";
 import MessagesAdmin from "@/components/admin/MessagesAdmin";
 import MethodsEditor from "@/components/admin/MethodsEditor";
@@ -69,17 +69,26 @@ export default function AdminClient() {
   const token = session?.access_token ?? "";
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setChecking(false);
-    });
+    // Never stay on "Loading…" forever: show the login form after 4 seconds at most.
+    const giveUp = setTimeout(() => setChecking(false), 4000);
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setSession(data.session))
+      .catch(() => setSession(null))
+      .finally(() => {
+        clearTimeout(giveUp);
+        setChecking(false);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => setSession(sess));
     // GET without a token: 503 = admin not configured, 401 = configured (just not signed in).
     // (Some hosts such as Netlify do not pass HEAD requests through reliably.)
     fetch("/api/admin/settings")
       .then((r) => setSetupOk(r.status !== 503))
       .catch(() => setSetupOk(true));
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      clearTimeout(giveUp);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const load = useCallback(async () => {
@@ -225,7 +234,7 @@ export default function AdminClient() {
         ))}
       </div>
 
-      {!loaded && !msg && <p className="text-muted">Loading settings…</p>}
+      {!loaded && !msg && <p className="text-muted">Loading settings… (the first load after a quiet period can take a few seconds)</p>}
 
       {loaded && tab === "brand" && (
         <Card title="Name & Logo">

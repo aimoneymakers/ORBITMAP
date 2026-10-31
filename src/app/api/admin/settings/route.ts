@@ -14,10 +14,13 @@ export async function HEAD() {
 }
 
 export async function GET(req: Request) {
-  const auth = await requireAdmin(req);
+  // Run the admin check and the database read in parallel (saves one round trip).
+  // The data is only returned if the admin check passes.
+  const [auth, { data, error }] = await Promise.all([
+    requireAdmin(req),
+    supabaseAdmin.from("site_settings").select("data").eq("id", 1).maybeSingle(),
+  ]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
-
-  const { data, error } = await supabaseAdmin.from("site_settings").select("data").eq("id", 1).maybeSingle();
   if (error) {
     return NextResponse.json(
       { error: "Could not read settings. Did you run supabase/schema.sql? (" + error.message + ")" },
