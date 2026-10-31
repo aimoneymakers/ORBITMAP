@@ -309,9 +309,6 @@ export default async function LandingPage() {
           <Link href="/products" className={styles.footerLink}>
             Products
           </Link>
-          <Link href="/blog" className={styles.footerLink}>
-            Blog
-          </Link>
           <Link href="/app" className={styles.footerLink}>
             Launch App
           </Link>

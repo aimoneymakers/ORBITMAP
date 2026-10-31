@@ -3,15 +3,17 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
+import ProductsAdmin from "@/components/admin/ProductsAdmin";
 import { DEFAULT_SETTINGS, type AffiliateItem, type SiteSettings } from "@/config/site.config";
 
-type Tab = "brand" | "home" | "contact" | "look" | "earn" | "bar";
+type Tab = "brand" | "home" | "contact" | "look" | "earn" | "products" | "bar";
 const TABS: { id: Tab; label: string }[] = [
   { id: "brand", label: "Name & Logo" },
   { id: "home", label: "Home Page" },
   { id: "contact", label: "Contact & Social" },
   { id: "look", label: "Colors & SEO" },
   { id: "earn", label: "💰 Earn Money" },
+  { id: "products", label: "🛍️ Products" },
   { id: "bar", label: "Announcement" },
 ];
 
@@ -358,7 +360,9 @@ export default function AdminClient() {
         </Card>
       )}
 
-      {loaded && (
+      {loaded && tab === "products" && <ProductsAdmin token={token} />}
+
+      {loaded && tab !== "products" && (
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-void/95 px-4 py-3 backdrop-blur">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
             <p className={`text-sm ${msg?.ok ? "text-green-400" : "text-red-400"}`}>{msg?.text}</p>

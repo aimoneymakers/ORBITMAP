@@ -147,7 +147,7 @@ export default async function TermsPage() {
           <h2 className={styles.sectionTitle}>7. Affiliate Disclosure</h2>
           <p className={styles.sectionText}>
             {siteName} participates in affiliate marketing programs. This means some links on this
-            site — for example, in blog posts recommending telescopes, binoculars, or other
+            site — for example, on product pages recommending telescopes, binoculars, or other
             stargazing equipment — are affiliate links. If you click through and make a qualifying
             purchase, we may earn a commission at no extra cost to you. We only recommend products
             we believe are genuinely relevant to our audience, but affiliate compensation may

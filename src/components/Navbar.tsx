@@ -11,7 +11,6 @@ const NAV_LINKS = [
   { label: "Launch App", href: "/app" },
   { label: "About", href: "/about" },
   { label: "Products", href: "/products" },
-  { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
 

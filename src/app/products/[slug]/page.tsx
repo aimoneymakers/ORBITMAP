@@ -117,6 +117,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
           <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-white/10 bg-white">
             <Image
               src={images[0]}
+              unoptimized={!images[0].includes(".supabase.co")}
               alt={product.name}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
@@ -144,7 +145,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                   key={i}
                   className="relative aspect-square overflow-hidden rounded-xl border border-white/10 bg-white"
                 >
-                  <Image src={src} alt={`${product.name} ${i + 2}`} fill sizes="120px" className="object-contain p-2" />
+                  <Image src={src} unoptimized={!src.includes(".supabase.co")} alt={`${product.name} ${i + 2}`} fill sizes="120px" className="object-contain p-2" />
                 </div>
               ))}
             </div>

@@ -165,8 +165,8 @@ export default async function AboutPage() {
             <Link href="/app" className={styles.ctaPrimary}>
               Launch the App
             </Link>
-            <Link href="/blog" className={styles.ctaSecondary}>
-              Read the Blog
+            <Link href="/products" className={styles.ctaSecondary}>
+              See Recommended Products
             </Link>
           </div>
         </section>

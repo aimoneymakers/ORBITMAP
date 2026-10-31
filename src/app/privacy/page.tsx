@@ -149,7 +149,7 @@ export default async function PrivacyPolicyPage() {
         <section id="affiliate" className={styles.section}>
           <h2 className={styles.sectionTitle}>4. Affiliate Links</h2>
           <p className={styles.sectionText}>
-            Some pages on {siteName}, including blog posts and product mentions, may contain
+            Some pages on {siteName}, including product pages and mentions, may contain
             affiliate links. If you click one of these links and make a qualifying purchase, we
             may earn a small commission at no additional cost to you. Affiliate relationships never
             influence the accuracy of the satellite tracking data we display. Full details are in

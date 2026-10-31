@@ -55,7 +55,7 @@ Without Supabase the site still works — it just uses the defaults in [`src/con
 - **Pass predictions** — see when a satellite (e.g. the ISS) will next be visible from your location
 - **Tailwind CSS** — utility-first styling with a dark, tactical "mission-control" visual theme
 - **PWA-ready** — installable with an offline-capable service worker
-- **Optional Supabase backend** — powers the blog and affiliate products pages (not required to run the core tracker)
+- **Optional Supabase backend** — powers the admin panel and the affiliate products page (not required to run the core tracker)
 
 ## Tech Stack
 
@@ -88,7 +88,7 @@ npm install
 
 The core satellite tracker (globe, map, sky view, TLE data) works with **no environment variables at all** — CelesTrak requires no API key.
 
-The blog and products pages use Supabase, and analytics is optional. Copy the example env file and fill in your own values if you want those features:
+The admin panel and products page use Supabase, and analytics is optional. Copy the example env file and fill in your own values if you want those features:
 
 ```bash
 cp .env.example .env.local
@@ -131,6 +131,15 @@ src/
 ```
 
 See [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md) for a full file-by-file breakdown of how the app works.
+
+## Selling products & affiliate links
+
+1. In Supabase > SQL Editor run `supabase/products.sql` once (after `supabase/schema.sql`).
+2. Open `/admin` > **🛍️ Products** > **+ Add product**.
+3. Fill in name, images (upload or link), details, price, and your **affiliate link**.
+4. Save. The product appears on `/products`; its **View Deal** button opens your affiliate link.
+
+Use Hide/Show to pause a product without deleting it. Disclose affiliate links to your visitors and follow each affiliate program's rules (some do not allow hotlinking their images; upload your own instead).
 
 ## Make it yours: rename checklist
 
